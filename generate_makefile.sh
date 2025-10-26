@@ -47,27 +47,13 @@ if ! command -v "$compiler" >/dev/null 2>&1; then
 fi
 
 # find all .c source files in the directory (not in subdirectories)
-# NEW: portable fallback for macOS bash 3 (no 'mapfile')
-if type mapfile >/dev/null 2>&1; then
-    mapfile -t source_files < <(find "$project_dir" -maxdepth 1 -type f -name '*.c' | LC_ALL=C sort)
-else
-    source_files=()
-    while IFS= read -r f; do source_files+=("$f"); done < <(find "$project_dir" -maxdepth 1 -type f -name '*.c' | LC_ALL=C sort)
-fi
+mapfile -t source_files < <(find "$project_dir" -maxdepth 1 -type f -name '*.c' | sort)
 
 # check if any .c files were found
 if (( ${#source_files[@]} == 0 )); then
     echo "Error: no .c source files found in '$project_dir'." >&2
     exit 5
 fi
-
-# NEW: verify readability of each source file (clearer error if permissions are off)
-for f in "${source_files[@]}"; do
-    if [[ ! -r "$f" ]]; then
-        echo "Error: source file is not readable: $f" >&2
-        exit 3
-    fi
-done
 
 echo "Found ${#source_files[@]} source files:"
 printf '   %s\n' "${source_files[@]}"
@@ -104,11 +90,6 @@ include_flag=""
 if [[ -d "$headers_dir" ]]; then
     include_flag='-Iheaders'
     echo "Found headers/: will use $include_flag"
-    # NEW: optional readability check for headers directory
-    if [[ ! -r "$headers_dir" ]]; then
-        echo "Error: headers/ directory exists but is not readable." >&2
-        exit 3
-    fi
 else
     echo "Warning: no 'headers/' directory found. Continuing without local includes." >&2
 fi
@@ -122,14 +103,10 @@ done
 # generate dependency lines for each .c file
 dependency_lines=()
 for src in "${relative_sources[@]}"; do
-    # Run compiler in the project directory, with optional -Iheaders
+    # Run gcc in the project directory, with optional -Iheaders
     # The -MM flag outputs dependencies in Makefile format.
-    # NEW: expand include flag safely only if set
-    deps=$(cd "$project_dir" && "$compiler" -MM ${include_flag:+$include_flag} "$src" 2>/dev/null || true)
-    # NEW: skip empty outputs to avoid blank lines
-    if [[ -n "${deps//[[:space:]]/}" ]]; then
-        dependency_lines+=("$deps")
-    fi
+    deps=$(cd "$project_dir" && gcc -MM $include_flag "$src" 2>/dev/null || true)
+    dependency_lines+=("$deps")
 done
 
 echo "Generated dependency lines:"
@@ -185,11 +162,6 @@ tmpfile="$(mktemp "$project_dir/.Makefile.tmp.XXXXXX")"
   echo ".PHONY: all clean"
   echo "clean:"
   echo "	rm -f \$(OBJS) \$(TARGET)"
-  # NEW: convenience run target (optional but handy)
-  echo
-  echo ".PHONY: run"
-  echo "run: \$(TARGET)"
-  echo "	./\$(TARGET)"
 } > "$tmpfile"
 
 mv "$tmpfile" "$project_dir/Makefile"
