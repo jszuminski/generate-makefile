@@ -39,6 +39,17 @@ fi
 
 echo "Directory is accessible (read & write)."
 
+# find all .c source files in the directory (not in subdirectories)
+mapfile -t source_files < <(find "$project_dir" -maxdepth 1 -type f -name '*.c' | sort)
+
+# check if any .c files were found
+if (( ${#source_files[@]} == 0 )); then
+    echo "Error: no .c source files found in '$project_dir'." >&2
+    exit 5
+fi
+
+echo "✅ Found ${#source_files[@]} source files:"
+printf '   %s\n' "${source_files[@]}"
 
 # My own notes
 # >&2 -> redirects output to stderr (>&1 is just stdout)
@@ -47,3 +58,4 @@ echo "Directory is accessible (read & write)."
 # exit 2 - misuse of shell builtins or wrong usage (ex. wrong arguments)
 # exit 3+ - custom error codes (own logic)
 # there can be no spaces between assignement to a variable (var=$1 not var = $1)
+# bash 4 is required (in bash 3 there's no `mapfile`)
