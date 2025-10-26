@@ -48,8 +48,34 @@ if (( ${#source_files[@]} == 0 )); then
     exit 5
 fi
 
-echo "✅ Found ${#source_files[@]} source files:"
+echo "Found ${#source_files[@]} source files:"
 printf '   %s\n' "${source_files[@]}"
+
+# detect which file contains main()
+main_files=()
+for f in "${source_files[@]}"; do
+    # simple but effective regex; anchors allow leading spaces
+    if grep -Eq '^[[:space:]]*int[[:space:]]+main[[:space:]]*\(' "$f"; then
+        main_files+=("$f")
+    fi
+done
+
+# validate number of mains
+if (( ${#main_files[@]} == 0 )); then
+    echo "Error: no file with a 'main' function found in '$project_dir'." >&2
+    exit 5
+elif (( ${#main_files[@]} > 1 )); then
+    printf "Error: multiple files contain 'main':\n" >&2
+    printf "  %s\n" "${main_files[@]}" >&2
+    exit 6
+fi
+
+# derive executable name from the file with main()
+main_basename=$(basename "${main_files[0]}")
+exe_name="${main_basename%.*}"
+
+echo "main() found in: $main_basename"
+echo "Executable name will be: $exe_name"
 
 # My own notes
 # >&2 -> redirects output to stderr (>&1 is just stdout)
