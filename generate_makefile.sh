@@ -18,7 +18,7 @@ fi
 
 # check if the directory exists
 if [[ ! -d "$project_dir" ]]; then
-    echo "Error: the direcotyr '$project_dir' does not exist or is not a directory." >&2
+    echo "Error: the directory '$project_dir' does not exist or is not a directory." >&2
     exit 2
 fi
 
