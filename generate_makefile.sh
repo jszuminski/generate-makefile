@@ -39,13 +39,6 @@ fi
 
 echo "Directory is accessible (read & write)."
 
-# NEW: pick a compiler usable for dependency gen (portable on macOS: cc -> clang)
-compiler="${CC:-cc}"
-if ! command -v "$compiler" >/dev/null 2>&1; then
-    echo "Error: no C compiler found (tried '\$CC' and 'cc'). Install Xcode Command Line Tools or GCC/Clang." >&2
-    exit 8
-fi
-
 # find all .c source files in the directory (not in subdirectories)
 mapfile -t source_files < <(find "$project_dir" -maxdepth 1 -type f -name '*.c' | sort)
 
