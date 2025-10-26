@@ -77,6 +77,16 @@ exe_name="${main_basename%.*}"
 echo "main() found in: $main_basename"
 echo "Executable name will be: $exe_name"
 
+# detect local headers directory and prepare include flag
+headers_dir="$project_dir/headers"
+include_flag=""
+if [[ -d "$headers_dir" ]]; then
+    include_flag='-Iheaders'
+    echo "Found headers/: will use $include_flag"
+else
+    echo "Warning: no 'headers/' directory found. Continuing without local includes." >&2
+fi
+
 # My own notes
 # >&2 -> redirects output to stderr (>&1 is just stdout)
 # exit 0 - success
