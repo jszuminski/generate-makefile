@@ -121,12 +121,11 @@ echo "Makefile header preview:"
   else
     echo "INCLUDES :="
   fi
-  echo "SRCS := ${relative_sources[*]}"
+  echo "SRCS := ${relative_sources[@]}"
   echo "OBJS := ${objects[*]}"
   echo "TARGET := $exe_name"
 } | sed 's/^/  /'
 
-# write Makefile atomically
 # write Makefile atomically
 tmpfile="$(mktemp "$project_dir/.Makefile.tmp.XXXXXX")"
 {
@@ -172,3 +171,4 @@ echo "Wrote Makefile to: $project_dir/Makefile"
 # exit 3+ - custom error codes (own logic)
 # there can be no spaces between assignement to a variable (var=$1 not var = $1)
 # bash 4 is required (in bash 3 there's no `mapfile`)
+# there is an assumption that all header files are in project/headers directory
