@@ -30,3 +30,38 @@ Przykład:
 ```
 
 Po wykonaniu w katalogu projektu pojawi się plik Makefile, gotowy do użycia z poleceniem make.
+
+## Lista zmian
+
+Tak jak rozmawialismy, wprowadzam 2 glowne poprawki.
+
+### 1. Korzystanie z `basename` do oczyszczenia rozszerzenia `.c` w jednej linijce
+
+```
+main_basename=$(basename "${main_files[0]}")
+exe_name="${main_basename%.*}"
+```
+
+zamienilem na:
+
+```
+exe_name=$(basename "${main_files[0]}" .c)
+```
+
+### 2. Naprawienie regexa - wykrywa `void main()` i `main()`
+
+Sprawdzilem i kompiluje poprawnie `void main()` i `main()`:
+
+```
+if grep -Eq '^[[:space:]]*int[[:space:]]+main[[:space:]]*(' "$f"; then
+    main_files+=("$f")
+fi
+```
+
+zamienione na:
+
+```
+if grep -Eq '^[[:space:]]*(int|void)?[[:space:]]*main[[:space:]]*\(' "$f"; then
+    main_files+=("$f")
+fi
+```

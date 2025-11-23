@@ -54,8 +54,7 @@ printf '   %s\n' "${source_files[@]}"
 # detect which file contains main()
 main_files=()
 for f in "${source_files[@]}"; do
-    # simple but effective regex; anchors allow leading spaces
-    if grep -Eq '^[[:space:]]*int[[:space:]]+main[[:space:]]*\(' "$f"; then
+    if grep -Eq '^[[:space:]]*(int|void)?[[:space:]]*main[[:space:]]*\(' "$f"; then
         main_files+=("$f")
     fi
 done
@@ -70,11 +69,9 @@ elif (( ${#main_files[@]} > 1 )); then
     exit 6
 fi
 
-# derive executable name from the file with main()
-main_basename=$(basename "${main_files[0]}")
-exe_name="${main_basename%.*}"
+exe_name=$(basename "${main_files[0]}" .c)
 
-echo "main() found in: $main_basename"
+echo "main() found in: $exe_name.c"
 echo "Executable name will be: $exe_name"
 
 # detect local headers directory and prepare include flag
@@ -111,22 +108,6 @@ for src in "${relative_sources[@]}"; do
     objects+=("${src%.c}.o")
 done
 
-# stage Makefile header (preview only)
-echo "Makefile header preview:"
-{
-  echo "CC ?= gcc"
-  echo "CFLAGS ?= -O2 -Wall -Wextra -std=c11"
-  if [[ -d "$headers_dir" ]]; then
-    echo "INCLUDES := -Iheaders"
-  else
-    echo "INCLUDES :="
-  fi
-  echo "SRCS := ${relative_sources[@]}"
-  echo "OBJS := ${objects[*]}"
-  echo "TARGET := $exe_name"
-} | sed 's/^/  /'
-
-# write Makefile atomically
 tmpfile="$(mktemp "$project_dir/.Makefile.tmp.XXXXXX")"
 {
   echo "CC ?= gcc"
